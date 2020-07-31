@@ -5,4 +5,11 @@ Usage:\
 `make run`\
 or\
 `make`\
-`./main >> <name>.ppm`
+`./main [arguments] >> <name>.ppm`\
+
+
+Arguments:\
+    -t, --threads: Controls how many threads are used.
+    -s, --samples: How many samples are taken per pixel.
+    -w, --width: Width of the output image.
+    -h, --height: Height of the output image.
