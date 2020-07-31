@@ -4,3 +4,8 @@ My code following raytracer.github.io books + my own
 Usage:
 
 `make run`
+
+or 
+
+`make
+./main >> <name>.ppm`
