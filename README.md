@@ -1,5 +1,5 @@
 # rt_weekend
-My code following https://raytracer.github.io books + my own
+My code following https://raytracing.github.io books + my own
 
 Usage:\
 `make run`\
