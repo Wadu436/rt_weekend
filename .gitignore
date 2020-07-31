@@ -1,3 +1,4 @@
 *.ppm
+*.o
 main
 .vscode
