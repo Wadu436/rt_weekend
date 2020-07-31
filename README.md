@@ -1,12 +1,8 @@
 # rt_weekend
 My code following raytracer.github.io books + my own
 
-Usage:
-
-`make run`
-
-or 
-
-`make
-
-./main >> <name>.ppm`
+Usage:\
+`make run`\
+or\
+`make`\
+`./main >> <name>.ppm`
