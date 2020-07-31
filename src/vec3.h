@@ -14,9 +14,9 @@ class vec3 {
     vec3(double e0, double e1, double e2) : e{e0, e1, e2} {}
     vec3(const vec3& o) : e{o.e[0], o.e[1], o.e[2]} {};
 
-    double x() const { return e[0]; }
-    double y() const { return e[1]; }
-    double z() const { return e[2]; }
+    inline double x() const { return e[0]; }
+    inline double y() const { return e[1]; }
+    inline double z() const { return e[2]; }
 
     static vec3 random() {
         return vec3(random_double(), random_double(), random_double());
@@ -50,9 +50,9 @@ class vec3 {
     }
 
     // Unitary operators
-    vec3 operator-() const { return vec3(-e[0], -e[1], -e[2]); };
-    double operator[](int i) const { return e[i]; };
-    double& operator[](int i) { return e[i]; }
+    inline vec3 operator-() const { return vec3(-e[0], -e[1], -e[2]); };
+    inline double operator[](int i) const { return e[i]; };
+    inline double& operator[](int i) { return e[i]; }
 
     // Compound assignment operators
     vec3& operator+=(const vec3& o) {
@@ -81,27 +81,27 @@ class vec3 {
     }
 
     // Regular binary operators
-    const vec3 operator+(const vec3& o) const {
+    inline const vec3 operator+(const vec3& o) const {
         return vec3(*this) += o;
     }
-    const vec3 operator-(const vec3& o) const {
+    inline const vec3 operator-(const vec3& o) const {
         return vec3(*this) -= o;
     }
-    const vec3 operator*(const vec3& o) const {
+    inline const vec3 operator*(const vec3& o) const {
         return vec3(*this) *= o;
     }
-    const vec3 operator*(const double t) const {
+    inline const vec3 operator*(const double t) const {
         return vec3(*this) *= t;
     }
-    friend vec3 operator*(const double t, const vec3& o) {
+    inline friend vec3 operator*(const double t, const vec3& o) {
         return vec3(o) *= t;
     }
-    const vec3 operator/(const double t) const {
+    inline const vec3 operator/(const double t) const {
         return vec3(*this) /= t;
     }
 
     // IO operators
-    friend std::ostream& operator<<(std::ostream& out, const vec3& v) {
+    inline friend std::ostream& operator<<(std::ostream& out, const vec3& v) {
         return out << v.e[0] << ' ' << v.e[1] << ' ' << v.e[2];
     }
 
@@ -116,13 +116,13 @@ class vec3 {
                     e[2] * o.e[0] - e[0] * o.e[2],
                     e[0] * o.e[1] - e[1] * o.e[0]);
     }
-    vec3 unit_vector() const {
+    inline vec3 unit_vector() const {
         return (*this) / length();
     }
-    double length_squared() const {
+    inline double length_squared() const {
         return dot(*this);
     }
-    double length() const {
+    inline double length() const {
         return sqrt(length_squared());
     }
 
