@@ -8,4 +8,5 @@ Usage:
 or 
 
 `make
+
 ./main >> <name>.ppm`
