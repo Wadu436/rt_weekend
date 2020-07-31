@@ -5,7 +5,7 @@ Usage:\
 `make run`\
 or\
 `make`\
-`./main [arguments] >> <name>.ppm`\
+`./main [arguments] >> <name>.ppm`
 
 
 Arguments:\
