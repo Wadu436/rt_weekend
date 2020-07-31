@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <thread>
 
 hittable_list random_scene(int density) {
     hittable_list world;
@@ -72,14 +73,29 @@ color ray_color(const ray& r, const hittable& world, int depth) {
     return (1.0-t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
 }
 
+void scanline(const hittable& world, const camera& cam, unsigned char* image, unsigned int j, unsigned int image_width, unsigned int image_height, unsigned int samples_per_pixel, unsigned int max_depth) {
+    for(unsigned int i = 0; i < image_width; ++i) {
+        color pixel_color(0, 0, 0);
+
+        for(unsigned int s = 0; s < samples_per_pixel; s++) {
+            double u = double(i + random_double()) / (image_width - 1);
+            double v = double(image_height - j + random_double()) / (image_height - 1);
+            ray r = cam.get_ray(u, v);
+            pixel_color += ray_color(r, world, max_depth);
+        }
+
+        write_color(image, image_width, image_height, i, j, pixel_color, samples_per_pixel);
+    }
+}
+
 int main() {
     
     // Image
     const auto aspect_ratio = 3.0 / 2.0;
-    const int image_width = 600;
-    const int image_height = static_cast<int>(image_width / aspect_ratio);
-    const int samples_per_pixel = 25;
-    const int max_depth = 50;
+    const unsigned int image_width = 300;
+    const unsigned int image_height = static_cast<int>(image_width / aspect_ratio);
+    const unsigned int samples_per_pixel = 12;
+    const unsigned int max_depth = 50;
 
     // Camera
     point3 lookfrom(13,2,3);
@@ -91,27 +107,27 @@ int main() {
     camera cam(lookfrom, lookat, vup, 20, aspect_ratio, fstop, dist_to_focus);
 
     // World
-    hittable_list world = random_scene(5);
+    hittable_list world = random_scene(3);
 
-    // Output
-
-    // Header
-    std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
-    std::cerr << std::fixed << std::setprecision(1);
     // Render
-    for(int j = image_height-1; j >= 0; --j) {
-        std::cerr << "\r" << 100*(1-double(j)/image_height) << "%" << std::flush;
-        for(int i = 0; i < image_width; ++i) {
-            color pixel_color(0, 0, 0);
-            for(int s = 0; s < samples_per_pixel; s++) {
-                double u = double(i + random_double()) / (image_width - 1);
-                double v = double(j + random_double()) / (image_height - 1);
-                ray r = cam.get_ray(u, v);
-                pixel_color += ray_color(r, world, max_depth);
-            }
-            write_color(std::cout, pixel_color, samples_per_pixel);
-        }
+    write_header(image_width, image_height);
+
+    unsigned char* image = new unsigned char[image_height*image_width*3];
+
+    std::cerr << std::fixed << std::setprecision(1);
+
+    for(unsigned int j = 0; j < image_height; ++j) {
+
+        std::cerr << "\r" << 100*double(j)/(image_height-1) << "%" << std::flush;
+
+        scanline(world, cam, image, j, image_width, image_height, samples_per_pixel, max_depth);
     }
 
+    // Output
+    write_image(std::cout, image, image_width, image_height);
+
     std::cerr << "\nDone.\n";
+
+    // Cleanup
+    delete[] image;
 }
