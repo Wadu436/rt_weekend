@@ -12,6 +12,9 @@
 #include <mutex>
 #include <chrono>
 
+#include <cstring>
+#include <cstdlib>
+
 #include <CTPL/ctpl.h>
 
 unsigned int completed_lines;
@@ -107,15 +110,44 @@ void scanline(int id, const hittable& world, const camera& cam, image img, std::
     completed_lines_mutex.unlock();
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
     // Image
-    const auto aspect_ratio = 3.0 / 2.0;
-    const unsigned int image_width = 300;
-    const unsigned int image_height = static_cast<int>(image_width / aspect_ratio);
-    const unsigned int samples_per_pixel = 12;
     const unsigned int max_depth = 50;
+
+    unsigned int image_width = 300;
+    unsigned int image_height = 200;
+    unsigned int samples_per_pixel = 12;
+    int threads = 4;
+
+    // Handle arguments
+    for(int i = 1; i < argc; i++) {
+        if(i + 1 != argc) {
+            if(strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--threads") == 0) {
+                threads = std::atoi(argv[i+1]);
+                i++;
+            }
+
+            if(strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--samples") == 0) {
+                samples_per_pixel = std::atoi(argv[i+1]);
+                i++;
+            }
+
+            if(strcmp(argv[i], "-w") == 0 || strcmp(argv[i], "--width") == 0) {
+                image_width = std::atoi(argv[i+1]);
+                i++;
+            }
+
+            if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--height") == 0) {
+                image_height = std::atoi(argv[i+1]);
+                i++;
+            }
+        }
+    }
+
+    auto aspect_ratio = double(image_width) / image_height;
 
     // Camera
     point3 lookfrom(13,2,3);
@@ -135,9 +167,11 @@ int main() {
     image img = {new unsigned char[image_height*image_width*3] {0}, image_width, image_height};
     std::mutex image_mutex;
 
-    ctpl::thread_pool pool(16);
+    ctpl::thread_pool pool(threads);
 
     completed_lines = 0;
+
+    update_progress(image_height);
 
     for(unsigned int j = 0; j < image_height; ++j) {
         pool.push(scanline, world, cam, img, &image_mutex, j, samples_per_pixel, max_depth);
@@ -159,4 +193,6 @@ int main() {
 
     // Cleanup
     delete[] img.image;
+
+    return 0;
 }
