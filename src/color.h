@@ -6,8 +6,8 @@
 
 struct image {
     unsigned char* image;
-    unsigned int image_width;
-    unsigned int image_height;
+    int image_width;
+    int image_height;
 } typedef image;
 
 void write_header(unsigned int image_width, unsigned int image_height) {

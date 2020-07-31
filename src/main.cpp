@@ -17,8 +17,13 @@
 
 #include <CTPL/ctpl.h>
 
-unsigned int completed_lines;
-std::mutex completed_lines_mutex;
+struct box {
+    int start_x, start_y, end_x, end_y;
+} typedef box;
+
+int completed_pixels;
+std::mutex completed_pixels_mutex;
+std::mutex update_progress_mutex;
 
 hittable_list random_scene(int density) {
     hittable_list world;
@@ -83,31 +88,36 @@ color ray_color(const ray& r, const hittable& world, int depth) {
     return (1.0-t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
 }
 
-void update_progress(unsigned int image_height) {
+void update_progress(int image_size) {
     std::cerr << std::fixed << std::setprecision(2);
-    std::cerr << '\r' << 100 * double(completed_lines) / image_height << '%';
+    std::cerr << '\r' << 100 * double(completed_pixels) / image_size << '%';
     //std::cerr << completed_lines << "\n";
 }
 
-void scanline(int id, const hittable& world, const camera& cam, image img, std::mutex* img_mutex, unsigned int line, unsigned int samples_per_pixel, unsigned int max_depth) {
-    for(unsigned int i = 0; i < img.image_width; ++i) {
-        color pixel_color(0, 0, 0);
+void render_area(int id, const hittable& world, const camera& cam, image img, std::mutex* img_mutex, int samples_per_pixel, int max_depth, box bound) {
+    for(int i = bound.start_x; i < bound.end_x; ++i) {
+        for(int j = bound.start_y; j < bound.end_y; ++j) {
+            color pixel_color(0, 0, 0);
 
-        for(unsigned int s = 0; s < samples_per_pixel; s++) {
-            double u = double(i + random_double()) / (img.image_width - 1);
-            double v = double(img.image_height - line + random_double()) / (img.image_height - 1);
-            ray r = cam.get_ray(u, v);
-            pixel_color += ray_color(r, world, max_depth);
+            for(int s = 0; s < samples_per_pixel; s++) {
+                double u = double(i + random_double()) / (img.image_width - 1);
+                double v = double(img.image_height - j + random_double()) / (img.image_height - 1);
+                ray r = cam.get_ray(u, v);
+                pixel_color += ray_color(r, world, max_depth);
+            }
+
+            img_mutex->lock();
+            write_color(img, i, j, pixel_color, samples_per_pixel);
+            img_mutex->unlock();
+
+            completed_pixels_mutex.lock();
+            completed_pixels++;
+            completed_pixels_mutex.unlock();
         }
-
-        img_mutex->lock();
-        write_color(img, i, line, pixel_color, samples_per_pixel);
-        img_mutex->unlock();
+        update_progress_mutex.lock();
+        update_progress(img.image_width * img.image_height);
+        update_progress_mutex.unlock();
     }
-    completed_lines_mutex.lock();
-    completed_lines++;
-    update_progress(img.image_height);
-    completed_lines_mutex.unlock();
 }
 
 int main(int argc, char* argv[]) {
@@ -115,11 +125,13 @@ int main(int argc, char* argv[]) {
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
     // Image
-    const unsigned int max_depth = 50;
+    const int max_depth = 50;
 
-    unsigned int image_width = 300;
-    unsigned int image_height = 200;
-    unsigned int samples_per_pixel = 12;
+    int image_width = 300;
+    int image_height = 200;
+    int samples_per_pixel = 12;
+    int bounds_size = 32;
+
     int threads = 4;
 
     // Handle arguments
@@ -144,15 +156,19 @@ int main(int argc, char* argv[]) {
                 image_height = std::atoi(argv[i+1]);
                 i++;
             }
+
+            if(strcmp(argv[i], "-b") == 0 || strcmp(argv[i], "--bounds") == 0) {
+                bounds_size = std::atoi(argv[i+1]);
+                i++;
+            }
         }
     }
-
-    auto aspect_ratio = double(image_width) / image_height;
 
     // Camera
     point3 lookfrom(13,2,3);
     point3 lookat(0,0,0);
     vec3 vup(0,1,0);
+    auto aspect_ratio = double(image_width) / image_height;
     auto dist_to_focus = 10;
     auto fstop = 100;
 
@@ -169,13 +185,23 @@ int main(int argc, char* argv[]) {
 
     ctpl::thread_pool pool(threads);
 
-    completed_lines = 0;
+    completed_pixels = 0;
 
     update_progress(image_height);
 
-    for(unsigned int j = 0; j < image_height; ++j) {
-        pool.push(scanline, world, cam, img, &image_mutex, j, samples_per_pixel, max_depth);
-        //scanline(0, world, cam, img, &image_mutex, j, samples_per_pixel, max_depth);
+    int horizontal_boxes = image_width % bounds_size == 0 ? image_width / bounds_size : 1 + image_width / bounds_size;
+    int vertical_boxes = image_height % bounds_size == 0 ? image_height / bounds_size : 1 + image_height / bounds_size;
+
+    for(int i = 0; i < horizontal_boxes; ++i) {
+        for(int j = 0; j < vertical_boxes; ++j) {
+            box bounds = {
+                i * bounds_size, 
+                j * bounds_size, 
+                std::min((i + 1) * bounds_size, image_width), 
+                std::min((j + 1) * bounds_size, image_height)
+            };
+            pool.push(render_area, world, cam, img, &image_mutex, samples_per_pixel, max_depth, bounds);
+        }
     }
 
     pool.stop(true);
