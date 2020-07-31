@@ -9,6 +9,13 @@
 #include <iostream>
 #include <iomanip>
 #include <thread>
+#include <mutex>
+#include <chrono>
+
+#include <CTPL/ctpl.h>
+
+unsigned int completed_lines;
+std::mutex completed_lines_mutex;
 
 hittable_list random_scene(int density) {
     hittable_list world;
@@ -73,23 +80,36 @@ color ray_color(const ray& r, const hittable& world, int depth) {
     return (1.0-t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
 }
 
-void scanline(const hittable& world, const camera& cam, unsigned char* image, unsigned int j, unsigned int image_width, unsigned int image_height, unsigned int samples_per_pixel, unsigned int max_depth) {
-    for(unsigned int i = 0; i < image_width; ++i) {
+void update_progress(unsigned int image_height) {
+    std::cerr << std::fixed << std::setprecision(2);
+    std::cerr << '\r' << 100 * double(completed_lines) / image_height << '%';
+    //std::cerr << completed_lines << "\n";
+}
+
+void scanline(int id, const hittable& world, const camera& cam, image img, std::mutex* img_mutex, unsigned int line, unsigned int samples_per_pixel, unsigned int max_depth) {
+    for(unsigned int i = 0; i < img.image_width; ++i) {
         color pixel_color(0, 0, 0);
 
         for(unsigned int s = 0; s < samples_per_pixel; s++) {
-            double u = double(i + random_double()) / (image_width - 1);
-            double v = double(image_height - j + random_double()) / (image_height - 1);
+            double u = double(i + random_double()) / (img.image_width - 1);
+            double v = double(img.image_height - line + random_double()) / (img.image_height - 1);
             ray r = cam.get_ray(u, v);
             pixel_color += ray_color(r, world, max_depth);
         }
 
-        write_color(image, image_width, image_height, i, j, pixel_color, samples_per_pixel);
+        img_mutex->lock();
+        write_color(img, i, line, pixel_color, samples_per_pixel);
+        img_mutex->unlock();
     }
+    completed_lines_mutex.lock();
+    completed_lines++;
+    update_progress(img.image_height);
+    completed_lines_mutex.unlock();
 }
 
 int main() {
-    
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+
     // Image
     const auto aspect_ratio = 3.0 / 2.0;
     const unsigned int image_width = 300;
@@ -112,22 +132,31 @@ int main() {
     // Render
     write_header(image_width, image_height);
 
-    unsigned char* image = new unsigned char[image_height*image_width*3];
+    image img = {new unsigned char[image_height*image_width*3] {0}, image_width, image_height};
+    std::mutex image_mutex;
 
-    std::cerr << std::fixed << std::setprecision(1);
+    ctpl::thread_pool pool(16);
+
+    completed_lines = 0;
 
     for(unsigned int j = 0; j < image_height; ++j) {
-
-        std::cerr << "\r" << 100*double(j)/(image_height-1) << "%" << std::flush;
-
-        scanline(world, cam, image, j, image_width, image_height, samples_per_pixel, max_depth);
+        pool.push(scanline, world, cam, img, &image_mutex, j, samples_per_pixel, max_depth);
+        //scanline(0, world, cam, img, &image_mutex, j, samples_per_pixel, max_depth);
     }
 
+    pool.stop(true);
+
     // Output
-    write_image(std::cout, image, image_width, image_height);
+    write_image(std::cout, img);
 
     std::cerr << "\nDone.\n";
 
+    std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+    
+    std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+    std::cerr << std::fixed << std::setprecision(3);
+    std::cerr << time_span.count() << " seconds.\n";
+
     // Cleanup
-    delete[] image;
+    delete[] img.image;
 }
