@@ -4,6 +4,7 @@
 #include "ray.h"
 #include "vec3.h"
 
+//axis-aligned bounding box 
 class aabb {
     private:
     point3 _min, _max;
