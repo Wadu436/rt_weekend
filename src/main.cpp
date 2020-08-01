@@ -1,5 +1,8 @@
 #include "rtweekend.h"
 
+#include "bvh.h"
+#include "ray.h"
+#include "vec3.h"
 #include "color.h"
 #include "camera.h"
 #include "hittable_list.h"
@@ -175,7 +178,13 @@ int main(int argc, char* argv[]) {
     camera cam(lookfrom, lookat, vup, 20, aspect_ratio, fstop, dist_to_focus);
 
     // World
-    hittable_list world = random_scene(11);
+    hittable_list world = random_scene(21);
+
+    std::cerr << "Building BVH... ";
+
+    bvh_node root = bvh_node(world, 0, 0);
+
+    std::cerr << "Finished\n";
 
     // Render
     write_header(image_width, image_height);
@@ -203,7 +212,7 @@ int main(int argc, char* argv[]) {
                 std::min((i + 1) * bounds_size, image_width), 
                 std::min((j + 1) * bounds_size, image_height)
             };
-            pool.push(render_area, world, cam, img, &image_mutex, samples_per_pixel, max_depth, bounds);
+            pool.push(render_area, root, cam, img, &image_mutex, samples_per_pixel, max_depth, bounds);
         }
     }
 

@@ -36,3 +36,9 @@ bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) cons
 
     return hit;
 }
+
+bool sphere::bounding_box(double t0, double t1, aabb& output_box) const {
+    vec3 r = {radius, radius, radius};
+    output_box = {center - r, center + r};
+    return true;
+}

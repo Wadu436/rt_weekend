@@ -1,6 +1,8 @@
 #pragma once
 
 #include "rtweekend.h"
+#include "ray.h"
+#include "vec3.h"
 #include "hittable.h"
 
 class material {

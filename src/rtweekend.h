@@ -11,6 +11,12 @@ using std::shared_ptr;
 using std::make_shared;
 using std::sqrt;
 
+// Structs
+
+struct interval {
+    double start, end;
+} typedef interval;
+
 // Constants
 
 const double infinity = std::numeric_limits<double>::infinity();
@@ -36,7 +42,14 @@ inline double clamp(double x, double min, double max) {
     return std::min(std::max(x, min), max);
 }
 
-// Common Headers
+inline bool overlap(interval d, interval e, interval& f) {
+    // calculates overlap of intervals d and e and puts them into f
+    f.start = std::max(d.start, e.start);
+    f.end = std::min(d.end, e.end);
+    return f.start < f.end;
+}
 
-#include "ray.h"
-#include "vec3.h"
+inline int random_int(int min, int max) {
+    // Returns a random integer in [min,max].
+    return static_cast<int>(random_double(min, max+1));
+}
