@@ -29,8 +29,9 @@ inline bool box_compare(const shared_ptr<hittable> a,
                         const shared_ptr<hittable> b, int axis) {
     aabb box_a, box_b;
 
-    if (!a->bounding_box(0, 0, box_a) || !b->bounding_box(0, 0, box_b))
+    if (!a->bounding_box(0, 0, box_a) || !b->bounding_box(0, 0, box_b)) {
         std::cerr << "No bounding box in bvh_node constructor.\n";
+    }
 
     return box_a.min()[axis] < box_b.min()[axis];
 }

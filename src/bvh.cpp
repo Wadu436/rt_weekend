@@ -44,16 +44,18 @@ bvh_node::bvh_node(std::vector<shared_ptr<hittable>> &objects, size_t start,
     aabb box_left, box_right;
 
     if (!left->bounding_box(time0, time1, box_left) ||
-        !right->bounding_box(time0, time1, box_right))
+        !right->bounding_box(time0, time1, box_right)) {
         std::cerr << "No bounding box in bvh_node constructor.\n";
+    }
 
     b_box = aabb::surrounding_box(box_left, box_right);
 }
 
 bool bvh_node::hit(const ray &r, double t_min, double t_max,
                    hit_record &rec) const {
-    if (!b_box.hit(r, t_min, t_max))
+    if (!b_box.hit(r, t_min, t_max)) {
         return false;
+    }
 
     bool hit_left = left->hit(r, t_min, t_max, rec);
     bool hit_right = right->hit(r, t_min, hit_left ? rec.t : t_max, rec);

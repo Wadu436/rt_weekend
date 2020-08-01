@@ -4,3 +4,4 @@ AccessModifierOffset: 0
 AlignAfterOpenBracket: Align
 AlignConsecutiveMacros: true
 BreakBeforeBraces: Attach
+AllowShortIfStatementsOnASingleLine: false

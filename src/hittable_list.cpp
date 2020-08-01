@@ -18,15 +18,17 @@ bool hittable_list::hit(const ray &r, double t_min, double t_max,
 }
 
 bool hittable_list::bounding_box(double t0, double t1, aabb &output_box) const {
-    if (objects.empty())
+    if (objects.empty()) {
         return false;
+    }
 
     aabb temp_box;
     bool first_box = true;
 
     for (const auto &object : objects) {
-        if (!object->bounding_box(t0, t1, temp_box))
+        if (!object->bounding_box(t0, t1, temp_box)) {
             return false;
+        }
         output_box =
             first_box ? temp_box : aabb::surrounding_box(output_box, temp_box);
         first_box = false;

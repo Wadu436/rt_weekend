@@ -13,8 +13,9 @@ bool aabb::hit(const ray &r, double tmin, double tmax) const {
         double t0 = (_min[a] - r.origin()[a]) * inv_dir;
         double t1 = (_max[a] - r.origin()[a]) * inv_dir;
 
-        if (inv_dir < 0.0f)
+        if (inv_dir < 0.0f) {
             std::swap(t0, t1);
+        }
 
         tmin = t0 > tmin ? t0 : tmin;
         tmax = t1 < tmax ? t1 : tmax;
