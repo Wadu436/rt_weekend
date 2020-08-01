@@ -1,22 +1,22 @@
 #include "rtweekend.h"
 
 #include "bvh.h"
-#include "ray.h"
-#include "vec3.h"
-#include "color.h"
 #include "camera.h"
+#include "color.h"
 #include "hittable_list.h"
 #include "material.h"
+#include "ray.h"
 #include "sphere.h"
+#include "vec3.h"
 
-#include <iostream>
-#include <iomanip>
-#include <thread>
-#include <mutex>
 #include <chrono>
+#include <iomanip>
+#include <iostream>
+#include <mutex>
+#include <thread>
 
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
 
 #include "CTPL/ctpl.h"
 
@@ -36,7 +36,8 @@ hittable_list random_scene(int density) {
     for (int a = -density; a < density; a++) {
         for (int b = -density; b < density; b++) {
             auto choose_mat = random_double();
-            point3 center(a + 0.9*random_double(), 0.2, b + 0.9*random_double());
+            point3 center(a + 0.9 * random_double(), 0.2,
+                          b + 0.9 * random_double());
 
             if ((center - point3(4, 0.2, 0)).length() > 0.9) {
                 shared_ptr<material> sphere_material;
@@ -45,17 +46,20 @@ hittable_list random_scene(int density) {
                     // diffuse
                     auto albedo = color::random() * color::random();
                     sphere_material = make_shared<lambertian>(albedo);
-                    world.add(make_shared<sphere>(center, 0.2, sphere_material));
+                    world.add(
+                        make_shared<sphere>(center, 0.2, sphere_material));
                 } else if (choose_mat < 0.95) {
                     // metal
                     auto albedo = color::random(0.5, 1);
                     auto fuzz = random_double(0, 0.5);
                     sphere_material = make_shared<metal>(albedo, fuzz);
-                    world.add(make_shared<sphere>(center, 0.2, sphere_material));
+                    world.add(
+                        make_shared<sphere>(center, 0.2, sphere_material));
                 } else {
                     // glass
                     sphere_material = make_shared<dielectric>(1.5);
-                    world.add(make_shared<sphere>(center, 0.2, sphere_material));
+                    world.add(
+                        make_shared<sphere>(center, 0.2, sphere_material));
                 }
             }
         }
@@ -73,39 +77,43 @@ hittable_list random_scene(int density) {
     return world;
 }
 
-color ray_color(const ray& r, const hittable& world, int depth) {
-    if (depth <= 0) return color(0, 0, 0);
+color ray_color(const ray &r, const hittable &world, int depth) {
+    if (depth <= 0)
+        return color(0, 0, 0);
 
     hit_record rec;
-    if(world.hit(r, 0.001, infinity, rec)) {
+    if (world.hit(r, 0.001, infinity, rec)) {
         color attenuation;
         ray scattered;
-        if(rec.mat_ptr->scatter(r, rec, attenuation, scattered)) {
+        if (rec.mat_ptr->scatter(r, rec, attenuation, scattered)) {
             return attenuation * ray_color(scattered, world, depth - 1);
         }
         return color(0, 0, 0);
     }
 
     vec3 unit_dir = r.direction().unit_vector();
-    auto t = 0.5*(unit_dir.y() + 1.0);
-    return (1.0-t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
+    auto t = 0.5 * (unit_dir.y() + 1.0);
+    return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
 }
 
 void update_progress(int image_size) {
     std::cerr << std::fixed << std::setprecision(2);
     std::cerr << '\r' << 100 * double(completed_pixels) / image_size << '%';
     last_update = completed_pixels;
-    //std::cerr << completed_lines << "\n";
+    // std::cerr << completed_lines << "\n";
 }
 
-void render_area(int id, const hittable& world, const camera& cam, image img, std::mutex* img_mutex, int samples_per_pixel, int max_depth, box bound) {
-    for(int i = bound.start_x; i < bound.end_x; ++i) {
-        for(int j = bound.start_y; j < bound.end_y; ++j) {
+void render_area(int id, const hittable &world, const camera &cam, image img,
+                 std::mutex *img_mutex, int samples_per_pixel, int max_depth,
+                 box bound) {
+    for (int i = bound.start_x; i < bound.end_x; ++i) {
+        for (int j = bound.start_y; j < bound.end_y; ++j) {
             color pixel_color(0, 0, 0);
 
-            for(int s = 0; s < samples_per_pixel; s++) {
+            for (int s = 0; s < samples_per_pixel; s++) {
                 double u = double(i + random_double()) / (img.image_width - 1);
-                double v = double(img.image_height - j + random_double()) / (img.image_height - 1);
+                double v = double(img.image_height - j + random_double()) /
+                           (img.image_height - 1);
                 ray r = cam.get_ray(u, v);
                 pixel_color += ray_color(r, world, max_depth);
             }
@@ -116,7 +124,8 @@ void render_area(int id, const hittable& world, const camera& cam, image img, st
 
             completed_pixels_mutex.lock();
             completed_pixels++;
-            if(completed_pixels - last_update > 640) update_progress(img.image_width * img.image_height);
+            if (completed_pixels - last_update > 640)
+                update_progress(img.image_width * img.image_height);
             completed_pixels_mutex.unlock();
         }
     }
@@ -126,7 +135,7 @@ void render_area(int id, const hittable& world, const camera& cam, image img, st
     completed_pixels_mutex.unlock();
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     // Image
     const int max_depth = 50;
 
@@ -138,39 +147,43 @@ int main(int argc, char* argv[]) {
     int threads = 4;
 
     // Handle arguments
-    for(int i = 1; i < argc; i++) {
-        if(i + 1 != argc) {
-            if(strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--threads") == 0) {
-                threads = std::atoi(argv[i+1]);
+    for (int i = 1; i < argc; i++) {
+        if (i + 1 != argc) {
+            if (strcmp(argv[i], "-t") == 0 ||
+                strcmp(argv[i], "--threads") == 0) {
+                threads = std::atoi(argv[i + 1]);
                 i++;
             }
 
-            if(strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--samples") == 0) {
-                samples_per_pixel = std::atoi(argv[i+1]);
+            if (strcmp(argv[i], "-s") == 0 ||
+                strcmp(argv[i], "--samples") == 0) {
+                samples_per_pixel = std::atoi(argv[i + 1]);
                 i++;
             }
 
-            if(strcmp(argv[i], "-w") == 0 || strcmp(argv[i], "--width") == 0) {
-                image_width = std::atoi(argv[i+1]);
+            if (strcmp(argv[i], "-w") == 0 || strcmp(argv[i], "--width") == 0) {
+                image_width = std::atoi(argv[i + 1]);
                 i++;
             }
 
-            if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--height") == 0) {
-                image_height = std::atoi(argv[i+1]);
+            if (strcmp(argv[i], "-h") == 0 ||
+                strcmp(argv[i], "--height") == 0) {
+                image_height = std::atoi(argv[i + 1]);
                 i++;
             }
 
-            if(strcmp(argv[i], "-b") == 0 || strcmp(argv[i], "--bounds") == 0) {
-                bounds_size = std::atoi(argv[i+1]);
+            if (strcmp(argv[i], "-b") == 0 ||
+                strcmp(argv[i], "--bounds") == 0) {
+                bounds_size = std::atoi(argv[i + 1]);
                 i++;
             }
         }
     }
 
     // Camera
-    point3 lookfrom(13,2,3);
-    point3 lookat(0,0,0);
-    vec3 vup(0,1,0);
+    point3 lookfrom(13, 2, 3);
+    point3 lookat(0, 0, 0);
+    vec3 vup(0, 1, 0);
     auto aspect_ratio = double(image_width) / image_height;
     auto dist_to_focus = 10;
     auto fstop = 100;
@@ -189,7 +202,8 @@ int main(int argc, char* argv[]) {
     // Render
     write_header(image_width, image_height);
 
-    image img = {new unsigned char[image_height*image_width*3] {0}, image_width, image_height};
+    image img = {new unsigned char[image_height * image_width * 3]{0},
+                 image_width, image_height};
     std::mutex image_mutex;
 
     ctpl::thread_pool pool(threads);
@@ -199,20 +213,23 @@ int main(int argc, char* argv[]) {
 
     update_progress(image_height);
 
-    int horizontal_boxes = image_width % bounds_size == 0 ? image_width / bounds_size : 1 + image_width / bounds_size;
-    int vertical_boxes = image_height % bounds_size == 0 ? image_height / bounds_size : 1 + image_height / bounds_size;
+    int horizontal_boxes = image_width % bounds_size == 0
+                               ? image_width / bounds_size
+                               : 1 + image_width / bounds_size;
+    int vertical_boxes = image_height % bounds_size == 0
+                             ? image_height / bounds_size
+                             : 1 + image_height / bounds_size;
 
-    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+    std::chrono::high_resolution_clock::time_point start =
+        std::chrono::high_resolution_clock::now();
 
-    for(int i = 0; i < horizontal_boxes; ++i) {
-        for(int j = 0; j < vertical_boxes; ++j) {
-            box bounds = {
-                i * bounds_size, 
-                j * bounds_size, 
-                std::min((i + 1) * bounds_size, image_width), 
-                std::min((j + 1) * bounds_size, image_height)
-            };
-            pool.push(render_area, root, cam, img, &image_mutex, samples_per_pixel, max_depth, bounds);
+    for (int i = 0; i < horizontal_boxes; ++i) {
+        for (int j = 0; j < vertical_boxes; ++j) {
+            box bounds = {i * bounds_size, j * bounds_size,
+                          std::min((i + 1) * bounds_size, image_width),
+                          std::min((j + 1) * bounds_size, image_height)};
+            pool.push(render_area, root, cam, img, &image_mutex,
+                      samples_per_pixel, max_depth, bounds);
         }
     }
 
@@ -223,9 +240,11 @@ int main(int argc, char* argv[]) {
 
     std::cerr << "\nDone.\n";
 
-    std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-    
-    std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+    std::chrono::high_resolution_clock::time_point end =
+        std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> time_span =
+        std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
     std::cerr << std::fixed << std::setprecision(3);
     std::cerr << time_span.count() << " seconds.\n";
 

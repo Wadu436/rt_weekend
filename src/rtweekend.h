@@ -7,8 +7,8 @@
 
 // Usings
 
-using std::shared_ptr;
 using std::make_shared;
+using std::shared_ptr;
 using std::sqrt;
 
 // Structs
@@ -29,9 +29,7 @@ inline double degrees_to_radians(double degrees) {
 }
 
 // returns a random double in the range [0, 1)
-inline double random_double() {
-    return rand() / (RAND_MAX + 1.0);
-}
+inline double random_double() { return rand() / (RAND_MAX + 1.0); }
 
 // returns a random double in the range [min, max)
 inline double random_double(double min, double max) {
@@ -42,7 +40,7 @@ inline double clamp(double x, double min, double max) {
     return std::min(std::max(x, min), max);
 }
 
-inline bool overlap(interval d, interval e, interval& f) {
+inline bool overlap(interval d, interval e, interval &f) {
     // calculates overlap of intervals d and e and puts them into f
     f.start = std::max(d.start, e.start);
     f.end = std::min(d.end, e.end);
@@ -51,5 +49,5 @@ inline bool overlap(interval d, interval e, interval& f) {
 
 inline int random_int(int min, int max) {
     // Returns a random integer in [min,max].
-    return static_cast<int>(random_double(min, max+1));
+    return static_cast<int>(random_double(min, max + 1));
 }
