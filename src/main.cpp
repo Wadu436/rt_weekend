@@ -114,10 +114,10 @@ void render_area(int id, const hittable& world, const camera& cam, image img, st
             completed_pixels++;
             completed_pixels_mutex.unlock();
         }
-        update_progress_mutex.lock();
-        update_progress(img.image_width * img.image_height);
-        update_progress_mutex.unlock();
     }
+    update_progress_mutex.lock();
+    update_progress(img.image_width * img.image_height);
+    update_progress_mutex.unlock();
 }
 
 int main(int argc, char* argv[]) {
@@ -127,10 +127,10 @@ int main(int argc, char* argv[]) {
     // Image
     const int max_depth = 50;
 
-    int image_width = 300;
-    int image_height = 200;
-    int samples_per_pixel = 12;
-    int bounds_size = 32;
+    int image_width = 1600;
+    int image_height = 900;
+    int samples_per_pixel = 32;
+    int bounds_size = 64;
 
     int threads = 4;
 

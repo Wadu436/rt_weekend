@@ -55,28 +55,28 @@ class vec3 {
     inline double& operator[](int i) { return e[i]; }
 
     // Compound assignment operators
-    vec3& operator+=(const vec3& o) {
+    inline vec3& operator+=(const vec3& o) {
         e[0] += o.e[0];
         e[1] += o.e[1];
         e[2] += o.e[2];
         return *this;
     }
-    vec3& operator-=(const vec3& o) {
+    inline vec3& operator-=(const vec3& o) {
         return *this += -o;
     }
-    vec3& operator*=(const vec3 o) {
+    inline vec3& operator*=(const vec3 o) {
         e[0] *= o.e[0];
         e[1] *= o.e[1];
         e[2] *= o.e[2];
         return *this;
     }
-    vec3& operator*=(const double t) {
+    inline vec3& operator*=(const double t) {
         e[0] *= t;
         e[1] *= t;
         e[2] *= t;
         return *this;
     }
-    vec3& operator/=(const double t) {
+    inline vec3& operator/=(const double t) {
         return *this *= 1/t;
     }
 
@@ -127,7 +127,7 @@ class vec3 {
     }
 
     vec3 reflect(const vec3& normal) const {
-        return *this - 2 * dot(normal) * normal;
+        return *this - normal * (2 * dot(normal));
     }
     vec3 refract(const vec3& normal, double etai_over_etat) {
         auto cos_theta = dot(-normal);
