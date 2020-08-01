@@ -22,8 +22,8 @@ struct box {
 } typedef box;
 
 int completed_pixels;
+int last_update;
 std::mutex completed_pixels_mutex;
-std::mutex update_progress_mutex;
 
 hittable_list random_scene(int density) {
     hittable_list world;
@@ -91,6 +91,7 @@ color ray_color(const ray& r, const hittable& world, int depth) {
 void update_progress(int image_size) {
     std::cerr << std::fixed << std::setprecision(2);
     std::cerr << '\r' << 100 * double(completed_pixels) / image_size << '%';
+    last_update = completed_pixels;
     //std::cerr << completed_lines << "\n";
 }
 
@@ -112,18 +113,17 @@ void render_area(int id, const hittable& world, const camera& cam, image img, st
 
             completed_pixels_mutex.lock();
             completed_pixels++;
+            if(completed_pixels - last_update > 640) update_progress(img.image_width * img.image_height);
             completed_pixels_mutex.unlock();
         }
     }
-    update_progress_mutex.lock();
+
+    completed_pixels_mutex.lock();
     update_progress(img.image_width * img.image_height);
-    update_progress_mutex.unlock();
+    completed_pixels_mutex.unlock();
 }
 
 int main(int argc, char* argv[]) {
-
-    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-
     // Image
     const int max_depth = 50;
 
@@ -186,11 +186,14 @@ int main(int argc, char* argv[]) {
     ctpl::thread_pool pool(threads);
 
     completed_pixels = 0;
+    last_update = 0;
 
     update_progress(image_height);
 
     int horizontal_boxes = image_width % bounds_size == 0 ? image_width / bounds_size : 1 + image_width / bounds_size;
     int vertical_boxes = image_height % bounds_size == 0 ? image_height / bounds_size : 1 + image_height / bounds_size;
+
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
     for(int i = 0; i < horizontal_boxes; ++i) {
         for(int j = 0; j < vertical_boxes; ++j) {
