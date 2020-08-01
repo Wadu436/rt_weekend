@@ -1,7 +1,7 @@
-CPP=g++
-CPPFLAGS=-I . -Wall -g -O0 -fsanitize=address -fno-omit-frame-pointer
+CPP=clang++
+CPPFLAGS=-I . -Wall -O3 -fsanitize=address -fno-omit-frame-pointer -std=c++17 
 #CPPFLAGS=-I . -I lodepng -Wall -g -Og
-#CPPFLAGS=-I . -I lodepng -Wall -g -O3
+#CPPFLAGS=-I . -Wall -g -O3
 DEPS = src/color.h src/vec3.h
 
 DEPS = src/camera.h src/color.h src/hittable.h src/hittable_list.h src/material.h src/ray.h src/rtweekend.h src/sphere.h src/vec3.h

@@ -19,5 +19,6 @@ struct hit_record {
 
 class hittable {
     public:
+    virtual ~hittable() {};
     virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const = 0;
 };

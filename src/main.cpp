@@ -15,7 +15,7 @@
 #include <cstring>
 #include <cstdlib>
 
-#include <CTPL/ctpl.h>
+#include "CTPL/ctpl.h"
 
 struct box {
     int start_x, start_y, end_x, end_y;
@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
     camera cam(lookfrom, lookat, vup, 20, aspect_ratio, fstop, dist_to_focus);
 
     // World
-    hittable_list world = random_scene(3);
+    hittable_list world = random_scene(11);
 
     // Render
     write_header(image_width, image_height);
