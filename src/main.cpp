@@ -5,6 +5,7 @@
 #include "color.h"
 #include "hittable_list.h"
 #include "material.h"
+#include "moving_sphere.h"
 #include "ray.h"
 #include "sphere.h"
 #include "vec3.h"
@@ -17,6 +18,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 
 #include "CTPL/ctpl.h"
 
@@ -37,30 +39,32 @@ hittable_list random_scene(int density)
     for (int a = -density; a < density; a++) {
         for (int b = -density; b < density; b++) {
             auto choose_mat = random_double();
-            point3 center(
+            point3 center0(
                 a + 0.9 * random_double(), 0.2, b + 0.9 * random_double());
 
-            if ((center - point3(4, 0.2, 0)).length() > 0.9) {
+            if ((center0 - point3(4, 0.2, 0)).length() > 0.9) {
                 shared_ptr<material> sphere_material;
+                vec3 displacement = {0, random_double(0, .7), 0};
+                point3 center1 = center0 + displacement;
 
                 if (choose_mat < 0.8) {
                     // diffuse
                     auto albedo = color::random() * color::random();
                     sphere_material = make_shared<lambertian>(albedo);
-                    world.add(
-                        make_shared<sphere>(center, 0.2, sphere_material));
+                    world.add(make_shared<moving_sphere>(
+                        center0, center1, 0.2, 0, 1, sphere_material));
                 } else if (choose_mat < 0.95) {
                     // metal
                     auto albedo = color::random(0.5, 1);
                     auto fuzz = random_double(0, 0.5);
                     sphere_material = make_shared<metal>(albedo, fuzz);
                     world.add(
-                        make_shared<sphere>(center, 0.2, sphere_material));
+                        make_shared<sphere>(center0, 0.2, sphere_material));
                 } else {
                     // glass
                     sphere_material = make_shared<dielectric>(1.5);
                     world.add(
-                        make_shared<sphere>(center, 0.2, sphere_material));
+                        make_shared<sphere>(center0, 0.2, sphere_material));
                 }
             }
         }
@@ -147,6 +151,10 @@ void render_area(
 
 int main(int argc, char *argv[])
 {
+    // Initialize RNG
+    // std::srand(std::time(NULL));
+    std::srand(6);
+
     // Image
     const int max_depth = 50;
 
@@ -199,14 +207,15 @@ int main(int argc, char *argv[])
     auto dist_to_focus = 10;
     auto fstop = 100;
 
-    camera cam(lookfrom, lookat, vup, 20, aspect_ratio, fstop, dist_to_focus);
+    camera cam(
+        lookfrom, lookat, vup, 20, aspect_ratio, fstop, dist_to_focus, 0, 1);
 
     // World
-    hittable_list world = random_scene(21);
+    hittable_list world = random_scene(11);
 
     std::cerr << "Building BVH... ";
 
-    bvh_node root = bvh_node(world, 0, 0);
+    bvh_node root = bvh_node(world, 0, 1);
 
     std::cerr << "Finished\n";
 
@@ -243,9 +252,19 @@ int main(int argc, char *argv[])
                 j * bounds_size,
                 std::min((i + 1) * bounds_size, image_width),
                 std::min((j + 1) * bounds_size, image_height)};
+            /*render_area(
+                0,
+                world,
+                cam,
+                img,
+                &image_mutex,
+                samples_per_pixel,
+                max_depth,
+                bounds);*/
             pool.push(
                 render_area,
                 root,
+                // world,
                 cam,
                 img,
                 &image_mutex,

@@ -13,7 +13,7 @@ class sphere : public hittable
     public:
     sphere() {}
     sphere(point3 center, double radius, shared_ptr<material> material)
-        : center(center), radius(radius), mat_ptr(material)
+        : cen(center), r(radius), mat_ptr(material)
     {
     }
 
@@ -21,8 +21,11 @@ class sphere : public hittable
     hit(const ray &r, double t_min, double t_max, hit_record &rec) const final;
     bool bounding_box(double t0, double t1, aabb &output_box) const final;
 
+    inline point3 center() const { return cen; }
+    inline double radius() const { return r; }
+
     private:
-    point3 center;
-    double radius;
+    point3 cen;
+    double r;
     shared_ptr<material> mat_ptr;
 };

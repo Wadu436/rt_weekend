@@ -14,7 +14,7 @@ bool lambertian::scatter(
     ray &scattered) const
 {
     point3 scatter_dir = rec.normal + vec3::random_unit_vector();
-    scattered = ray(rec.p, scatter_dir);
+    scattered = ray(rec.p, scatter_dir, ray_in.time());
     attenuation = albedo;
     return true;
 }
@@ -26,7 +26,8 @@ bool metal::scatter(
     ray &scattered) const
 {
     vec3 reflected = ray_in.direction().reflect(rec.normal).unit_vector();
-    scattered = ray(rec.p, reflected + fuzz * vec3::random_in_unit_sphere());
+    scattered = ray(
+        rec.p, reflected + fuzz * vec3::random_in_unit_sphere(), ray_in.time());
     attenuation = albedo;
     return scattered.direction().dot(rec.normal) > 0;
 }
@@ -45,7 +46,7 @@ bool dielectric::scatter(
     double sin_theta = sqrt(1.0 - cos_theta * cos_theta);
 
     vec3 reflected = unit_dir.reflect(rec.normal);
-    scattered = ray(rec.p, reflected);
+    scattered = ray(rec.p, reflected, ray_in.time());
 
     if (etai_over_etat * sin_theta > 1.0) {
         return true;
@@ -54,7 +55,7 @@ bool dielectric::scatter(
     double reflect_prob = schlick(cos_theta, etai_over_etat);
     if (random_double() >= reflect_prob) {
         vec3 refracted = unit_dir.refract(rec.normal, etai_over_etat);
-        scattered = ray(rec.p, refracted);
+        scattered = ray(rec.p, refracted, ray_in.time());
     }
     return true;
 }

@@ -12,7 +12,9 @@ class camera
         double vfov,
         double aspect_ratio,
         double fstop,
-        double focus_dist)
+        double focus_dist,
+        double t0,
+        double t1)
     {
         auto theta = degrees_to_radians(vfov);
         auto h = tan(theta / 2);
@@ -30,21 +32,26 @@ class camera
             origin - horizontal / 2.0 - vertical / 2.0 - focus_dist * w;
         auto aperture = focus_dist / fstop;
         lens_radius = aperture / 2.0;
+
+        time0 = t0;
+        time1 = t1;
     }
 
     ray get_ray(double s, double t) const
     {
         vec3 rd = lens_radius * vec3::random_in_unit_disk();
         vec3 offset = u * rd.x() + v * rd.y();
+        double time = random_double(time0, time1);
 
         return ray(
             origin + offset,
-            lower_left_corner + s * horizontal + t * vertical - origin -
-                offset);
+            lower_left_corner + s * horizontal + t * vertical - origin - offset,
+            time);
     }
 
     private:
     point3 origin, lower_left_corner;
     vec3 horizontal, vertical, u, v, w;
     double lens_radius;
+    double time0, time1; // open/close shutter time
 };
