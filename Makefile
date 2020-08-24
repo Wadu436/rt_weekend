@@ -18,3 +18,6 @@ run: main
 clean:
 	rm -f main
 	find . -type f -name '*.o' -delete
+
+benchmark: main
+	rm -f img.png && ./main -w 800 -h 450 -s 10 | pnmtopng >> img.png

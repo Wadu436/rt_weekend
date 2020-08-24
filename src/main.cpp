@@ -28,7 +28,8 @@ int completed_pixels;
 int last_update;
 std::mutex completed_pixels_mutex;
 
-hittable_list random_scene(int density) {
+hittable_list random_scene(int density)
+{
     hittable_list world;
     auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
     world.add(make_shared<sphere>(point3(0, -1000, 0), 1000, ground_material));
@@ -36,8 +37,8 @@ hittable_list random_scene(int density) {
     for (int a = -density; a < density; a++) {
         for (int b = -density; b < density; b++) {
             auto choose_mat = random_double();
-            point3 center(a + 0.9 * random_double(), 0.2,
-                          b + 0.9 * random_double());
+            point3 center(
+                a + 0.9 * random_double(), 0.2, b + 0.9 * random_double());
 
             if ((center - point3(4, 0.2, 0)).length() > 0.9) {
                 shared_ptr<material> sphere_material;
@@ -77,7 +78,8 @@ hittable_list random_scene(int density) {
     return world;
 }
 
-color ray_color(const ray &r, const hittable &world, int depth) {
+color ray_color(const ray &r, const hittable &world, int depth)
+{
     if (depth <= 0)
         return color(0, 0, 0);
 
@@ -96,16 +98,24 @@ color ray_color(const ray &r, const hittable &world, int depth) {
     return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
 }
 
-void update_progress(int image_size) {
+void update_progress(int image_size)
+{
     std::cerr << std::fixed << std::setprecision(2);
     std::cerr << '\r' << 100 * double(completed_pixels) / image_size << '%';
     last_update = completed_pixels;
     // std::cerr << completed_lines << "\n";
 }
 
-void render_area(int id, const hittable &world, const camera &cam, image img,
-                 std::mutex *img_mutex, int samples_per_pixel, int max_depth,
-                 box bound) {
+void render_area(
+    int id,
+    const hittable &world,
+    const camera &cam,
+    image img,
+    std::mutex *img_mutex,
+    int samples_per_pixel,
+    int max_depth,
+    box bound)
+{
     for (int i = bound.start_x; i < bound.end_x; ++i) {
         for (int j = bound.start_y; j < bound.end_y; ++j) {
             color pixel_color(0, 0, 0);
@@ -135,7 +145,8 @@ void render_area(int id, const hittable &world, const camera &cam, image img,
     completed_pixels_mutex.unlock();
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     // Image
     const int max_depth = 50;
 
@@ -202,8 +213,10 @@ int main(int argc, char *argv[]) {
     // Render
     write_header(image_width, image_height);
 
-    image img = {new unsigned char[image_height * image_width * 3]{0},
-                 image_width, image_height};
+    image img = {
+        new unsigned char[image_height * image_width * 3]{0},
+        image_width,
+        image_height};
     std::mutex image_mutex;
 
     ctpl::thread_pool pool(threads);
@@ -225,11 +238,20 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < horizontal_boxes; ++i) {
         for (int j = 0; j < vertical_boxes; ++j) {
-            box bounds = {i * bounds_size, j * bounds_size,
-                          std::min((i + 1) * bounds_size, image_width),
-                          std::min((j + 1) * bounds_size, image_height)};
-            pool.push(render_area, root, cam, img, &image_mutex,
-                      samples_per_pixel, max_depth, bounds);
+            box bounds = {
+                i * bounds_size,
+                j * bounds_size,
+                std::min((i + 1) * bounds_size, image_width),
+                std::min((j + 1) * bounds_size, image_height)};
+            pool.push(
+                render_area,
+                root,
+                cam,
+                img,
+                &image_mutex,
+                samples_per_pixel,
+                max_depth,
+                bounds);
         }
     }
 

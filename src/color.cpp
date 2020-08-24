@@ -1,11 +1,13 @@
 #include "color.h"
 
-void write_header(unsigned int image_width, unsigned int image_height) {
+void write_header(unsigned int image_width, unsigned int image_height)
+{
     std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
 }
 
-void write_color(std::ostream &out, color pixel_color,
-                 unsigned int samples_per_pixel) {
+void write_color(
+    std::ostream &out, color pixel_color, unsigned int samples_per_pixel)
+{
     // Write the translated [0,255] value of each color component.
     auto r = pixel_color.x();
     auto g = pixel_color.y();
@@ -23,8 +25,13 @@ void write_color(std::ostream &out, color pixel_color,
         << static_cast<int>(256 * clamp(b, 0.0, 0.999)) << '\n';
 }
 
-void write_color(image img, unsigned int x, unsigned int y, color pixel_color,
-                 unsigned int samples_per_pixel) {
+void write_color(
+    image img,
+    unsigned int x,
+    unsigned int y,
+    color pixel_color,
+    unsigned int samples_per_pixel)
+{
     auto r = pixel_color.x();
     auto g = pixel_color.y();
     auto b = pixel_color.z();
@@ -46,7 +53,8 @@ void write_color(image img, unsigned int x, unsigned int y, color pixel_color,
     img.image[index++] = ib;
 }
 
-void write_image(std::ostream &out, image img) {
+void write_image(std::ostream &out, image img)
+{
     unsigned int size = img.image_height * img.image_width * 3;
     for (unsigned int i = 0; i < size; i++) {
         out << int(img.image[i]);

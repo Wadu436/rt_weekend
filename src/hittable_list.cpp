@@ -1,7 +1,8 @@
 #include "hittable_list.h"
 
-bool hittable_list::hit(const ray &r, double t_min, double t_max,
-                        hit_record &rec) const {
+bool hittable_list::hit(
+    const ray &r, double t_min, double t_max, hit_record &rec) const
+{
     hit_record temp_rec;
     bool hit = false;
     auto closest = t_max;
@@ -17,7 +18,8 @@ bool hittable_list::hit(const ray &r, double t_min, double t_max,
     return hit;
 }
 
-bool hittable_list::bounding_box(double t0, double t1, aabb &output_box) const {
+bool hittable_list::bounding_box(double t0, double t1, aabb &output_box) const
+{
     if (objects.empty()) {
         return false;
     }

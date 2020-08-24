@@ -1,7 +1,8 @@
 #include "sphere.h"
 
-bool sphere::hit(const ray &r, double t_min, double t_max,
-                 hit_record &rec) const {
+bool sphere::hit(
+    const ray &r, double t_min, double t_max, hit_record &rec) const
+{
     vec3 oc = r.origin() - center;
     auto a = r.direction().length_squared();
     auto half_b = r.direction().dot(oc);
@@ -38,7 +39,8 @@ bool sphere::hit(const ray &r, double t_min, double t_max,
     return hit;
 }
 
-bool sphere::bounding_box(double t0, double t1, aabb &output_box) const {
+bool sphere::bounding_box(double t0, double t1, aabb &output_box) const
+{
     vec3 r = {radius, radius, radius};
     output_box = {center - r, center + r};
     return true;
