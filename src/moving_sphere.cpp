@@ -1,5 +1,7 @@
 #include "moving_sphere.h"
 
+void get_sphere_uv(const vec3 &p, double &u, double &v);
+
 bool moving_sphere::hit(
     const ray &r, double t_min, double t_max, hit_record &rec) const
 {
@@ -33,6 +35,7 @@ bool moving_sphere::hit(
             vec3 out_normal = (rec.p - center(r.time())) / radius();
             rec.set_face_normal(r, out_normal);
             rec.mat_ptr = mat_ptr;
+            get_sphere_uv((rec.p - center(r.time())) / radius(), rec.u, rec.v);
         }
     }
 

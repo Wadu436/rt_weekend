@@ -3,6 +3,7 @@
 #include "hittable.h"
 #include "ray.h"
 #include "rtweekend.h"
+#include "texture.h"
 #include "vec3.h"
 
 class material
@@ -19,7 +20,8 @@ class material
 class lambertian : public material
 {
     public:
-    lambertian(const color &albedo) : albedo(albedo) {}
+    lambertian(const color &a) : albedo(make_shared<solid_color>(a)) {}
+    lambertian(shared_ptr<texture> a) : albedo(a) {}
     bool scatter(
         const ray &ray_in,
         const hit_record &rec,
@@ -27,13 +29,18 @@ class lambertian : public material
         ray &scattered) const final;
 
     private:
-    color albedo;
+    shared_ptr<texture> albedo;
 };
 
 class metal : public material
 {
     public:
-    metal(const color &albedo, double f) : albedo(albedo), fuzz(f) {}
+    metal(const color &a, double f)
+        : albedo(make_shared<solid_color>(a)), fuzz(f)
+    {
+    }
+    metal(shared_ptr<texture> a, double f) : albedo(a), fuzz(f) {}
+
     bool scatter(
         const ray &ray_in,
         const hit_record &rec,
@@ -41,7 +48,7 @@ class metal : public material
         ray &scattered) const final;
 
     private:
-    color albedo;
+    shared_ptr<texture> albedo;
     double fuzz;
 };
 

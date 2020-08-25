@@ -1,5 +1,15 @@
 #include "sphere.h"
 
+#include <cmath>
+
+void get_sphere_uv(const vec3 &p, double &u, double &v)
+{
+    auto phi = std::atan2(p.z(), p.x());
+    auto theta = std::asin(p.y());
+    u = 1 - (phi + pi) / (2 * pi);
+    v = (theta + pi / 2) / pi;
+}
+
 bool sphere::hit(
     const ray &r, double t_min, double t_max, hit_record &rec) const
 {
@@ -33,6 +43,7 @@ bool sphere::hit(
             vec3 out_normal = (rec.p - center()) / radius();
             rec.set_face_normal(r, out_normal);
             rec.mat_ptr = mat_ptr;
+            get_sphere_uv((rec.p - center()) / radius(), rec.u, rec.v);
         }
     }
 

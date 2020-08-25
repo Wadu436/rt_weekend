@@ -15,7 +15,7 @@ bool lambertian::scatter(
 {
     point3 scatter_dir = rec.normal + vec3::random_unit_vector();
     scattered = ray(rec.p, scatter_dir, ray_in.time());
-    attenuation = albedo;
+    attenuation = albedo->value(rec.u, rec.v, rec.p);
     return true;
 }
 
@@ -28,7 +28,7 @@ bool metal::scatter(
     vec3 reflected = ray_in.direction().reflect(rec.normal).unit_vector();
     scattered = ray(
         rec.p, reflected + fuzz * vec3::random_in_unit_sphere(), ray_in.time());
-    attenuation = albedo;
+    attenuation = albedo->value(rec.u, rec.v, rec.p);
     return scattered.direction().dot(rec.normal) > 0;
 }
 

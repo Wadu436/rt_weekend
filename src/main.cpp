@@ -33,7 +33,9 @@ std::mutex completed_pixels_mutex;
 hittable_list random_scene(int density)
 {
     hittable_list world;
-    auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
+    // auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
+    auto ground_material = make_shared<lambertian>(
+        make_shared<checker_texture>(color(0.8, 0.2, 0.3), color(.9, .9, .9)));
     world.add(make_shared<sphere>(point3(0, -1000, 0), 1000, ground_material));
 
     for (int a = -density; a < density; a++) {
@@ -44,7 +46,7 @@ hittable_list random_scene(int density)
 
             if ((center0 - point3(4, 0.2, 0)).length() > 0.9) {
                 shared_ptr<material> sphere_material;
-                vec3 displacement = {0, random_double(0, .7), 0};
+                vec3 displacement = {0, random_double(0, .3), 0};
                 point3 center1 = center0 + displacement;
 
                 if (choose_mat < 0.8) {
@@ -80,6 +82,24 @@ hittable_list random_scene(int density)
     world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
 
     return world;
+}
+
+hittable_list two_sphere()
+{
+    hittable_list objects;
+
+    auto checker = make_shared<checker_texture>(
+        color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
+
+    auto checker2d = make_shared<checker_texture_2d>(
+        color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
+
+    objects.add(make_shared<sphere>(
+        point3(0, -10, 0), 10, make_shared<lambertian>(checker)));
+    objects.add(make_shared<sphere>(
+        point3(0, 10, 0), 10, make_shared<lambertian>(checker2d)));
+
+    return objects;
 }
 
 color ray_color(const ray &r, const hittable &world, int depth)
@@ -165,6 +185,8 @@ int main(int argc, char *argv[])
 
     int threads = 4;
 
+    int scene = 0;
+
     // Handle arguments
     for (int i = 1; i < argc; i++) {
         if (i + 1 != argc) {
@@ -196,22 +218,49 @@ int main(int argc, char *argv[])
                 bounds_size = std::atoi(argv[i + 1]);
                 i++;
             }
+
+            if (strcmp(argv[i], "--scene") == 0) {
+                scene = std::atoi(argv[i + 1]);
+                i++;
+            }
         }
     }
 
-    // Camera
-    point3 lookfrom(13, 2, 3);
-    point3 lookat(0, 0, 0);
+    // World
+    hittable_list world;
+    point3 lookfrom;
+    point3 lookat;
+    double dist_to_focus;
+    double fstop;
+    double vfov;
+
+    switch (scene) {
+    default:
+    case 0:
+        world = random_scene(11);
+        // Camera
+        lookfrom = {13, 2, 3};
+        lookat = {0, 0, 0};
+        dist_to_focus = 10;
+        fstop = 100;
+        vfov = 20;
+        break;
+    case 1:
+        world = two_sphere();
+        // Camera
+        lookfrom = {21, 2, 3};
+        lookat = {0, 0, 0};
+        dist_to_focus = 10;
+        fstop = 100;
+        vfov = 60;
+        break;
+    }
+
     vec3 vup(0, 1, 0);
     auto aspect_ratio = double(image_width) / image_height;
-    auto dist_to_focus = 10;
-    auto fstop = 100;
 
     camera cam(
-        lookfrom, lookat, vup, 20, aspect_ratio, fstop, dist_to_focus, 0, 1);
-
-    // World
-    hittable_list world = random_scene(11);
+        lookfrom, lookat, vup, vfov, aspect_ratio, fstop, dist_to_focus, 0, 1);
 
     std::cerr << "Building BVH... ";
 
